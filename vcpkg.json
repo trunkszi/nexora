@@ -1,0 +1,11 @@
+{
+  "name": "nexora",
+  "version-semver": "0.1.0",
+  "description": "C++26 Sans-IO protocols and Proactor transport. Build with CMake 4.0 or newer and VCPKG_OVERLAY_PORTS set to $HOME/.local/vcpkg.",
+  "dependencies": [
+    "uarch",
+    "uring",
+    "cares",
+    "aws-lc"
+  ]
+}

@@ -1,0 +1,11 @@
+nexora provides C++26 Sans-IO protocols and Proactor transports.
+Build with CMake 4.0 or newer. Point VCPKG_OVERLAY_PORTS at $HOME/.local/vcpkg.
+
+    find_package(nexora CONFIG REQUIRED)
+    target_link_libraries(app PRIVATE nexora::nexora)
+
+The umbrella header is <nexora/nexora.hpp>.
+Protocol modules can be consumed separately through nexora::http1,
+nexora::http2, nexora::websocket and nexora::tls. DNS uses cares::Resolver.
+
+Generate portfile.cmake and vcpkg.json from the .in templates using the release version, verified commit SHA and archive SHA512.

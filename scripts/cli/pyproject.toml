@@ -1,0 +1,18 @@
+[project]
+name = "nexora-cli"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = ["invoke>=2.2", "typer>=0.15", "rich>=13.0", "pyyaml>=6.0"]
+
+[dependency-groups]
+dev = ["ruff>=0.11", "pytest>=9.0"]
+
+[tool.ruff]
+line-length = 110
+
+[tool.pytest.ini_options]
+pythonpath = [".."]
+testpaths = ["tests"]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["typer.Option", "typer.Argument"]

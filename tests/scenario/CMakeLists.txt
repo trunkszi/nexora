@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 4.0)
+nexora_add_test(h2_multiplex_scenario_test h2_multiplex_scenario_test.cc)
+nexora_add_test(websocket_upgrade_scenario_test websocket_upgrade_scenario_test.cc)
+nexora_add_test(server_protocol_boundaries_test server_protocol_boundaries_test.cc)
+nexora_add_test(round_robin_policy_test round_robin_policy_test.cc)
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
+add_test(NAME gem5_admission_tests COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/gem5_verify_test.py")
+add_test(NAME pmu_admission_tests COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/pmu_verify_test.py")

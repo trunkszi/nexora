@@ -1,0 +1,38 @@
+cmake_minimum_required(VERSION 4.0)
+nexora_add_test(nexora_smoke_test smoke_test.cc)
+if(NEXORA_BUILD_TOOLS)
+  nexora_add_codegen_probes(nexora_dependency_probes smoke_test.cc)
+  target_compile_definitions(nexora_dependency_probes PRIVATE NEXORA_CODEGEN_PROBE=1)
+endif()
+
+nexora_add_test(bytes_headers_tests http/headers_message_test.cc)
+nexora_add_test(nexora_bytes_scan_test bytes/bytes_scan_test.cc)
+nexora_add_test(nexora_uri_test http/uri_test.cc)
+nexora_add_test(nexora_reflect_decl_test http/reflect_decl_test.cc)
+
+nexora_add_test(tls_boundaries tls/tls_session_test.cc)
+
+nexora_add_test(parser_regressions http1/parser_regressions_test.cc)
+nexora_add_test(http1_tls_tests http1/http1_codec_test.cc)
+nexora_add_test(websocket_tests websocket/websocket_test.cc)
+nexora_add_test(websocket_word_scenarios websocket/websocket_word_test.cc)
+
+nexora_add_test(hpack_frame_tests http2/hpack_frame_test.cc)
+nexora_add_test(http2_multiplex_tests http2/http2_multiplex_test.cc)
+nexora_add_test(http2_boundaries http2/http2_boundaries_test.cc)
+nexora_add_test(http2_protocol_invariants http2/http2_protocol_invariants_test.cc)
+
+nexora_add_test(nexora_inbox_unit_test inbox/inbox_test.cc)
+nexora_add_test(nexora_completion_routes_unit_test dispatch/completion_routes_test.cc)
+nexora_add_test(nexora_socket_unit_test socket/socket_test.cc)
+nexora_add_test(nexora_pool_failover_unit_test pool/pool_failover_test.cc)
+nexora_add_test(nexora_parked_registry_test dispatch/parked_registry_test.cc)
+
+nexora_add_test(responder_test server/responder_test.cc)
+nexora_add_test(reflect_service_test server/reflect_service_test.cc)
+nexora_add_compile_fail(duplicate_route_compile_fail server/duplicate_route_compile_fail.cc)
+nexora_add_compile_fail(invalid_route_compile_fail server/invalid_route_compile_fail.cc)
+nexora_add_test(http_client_test client/http_client_test.cc)
+nexora_add_test(ws_client_test client/ws_client_test.cc)
+nexora_add_test(native_transport_test client/native_transport_test.cc)
+set_tests_properties(native_transport_test PROPERTIES TIMEOUT 20 LABELS "unit;loopback")

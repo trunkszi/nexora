@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 4.0)
+nexora_add_test(nexora_inbox_delivery_integration_test inbox_delivery_test.cc)
+nexora_add_test(client_server_integration_test client_server_integration_test.cc)
+nexora_add_test(native_tls_test native_tls_test.cc)
+set_tests_properties(native_tls_test PROPERTIES TIMEOUT 20 LABELS "integration;loopback")

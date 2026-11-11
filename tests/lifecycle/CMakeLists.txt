@@ -1,0 +1,4 @@
+cmake_minimum_required(VERSION 4.0)
+nexora_add_test(nexora_socket_lifecycle_test socket_lifecycle_test.cc)
+nexora_add_test(nexora_shared_proactor_teardown_test shared_proactor_teardown_test.cc)
+nexora_add_test(client_lifecycle_test client_lifecycle_test.cc)

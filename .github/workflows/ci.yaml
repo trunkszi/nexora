@@ -1,0 +1,99 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: [gcc-glibc, clang-glibc, gcc-musl, clang-musl]
+    env:
+      GRPCXX_SETUP_JOBS: '2'
+      GRPCXX_TOOLCHAIN: ${{ matrix.toolchain }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install CMake 4
+        uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: latest
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Cache compilers and vcpkg archives
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.local/toolchain/${{ matrix.toolchain }}
+            ~/.local/toolchain/gcc-glibc
+            ~/.cache/vcpkg/archives
+            ~/.cache/ccache
+          key: nexora-vcpkg-v1-${{ runner.os }}-${{ runner.arch }}-${{ matrix.toolchain }}-${{ hashFiles('scripts/install-dependencies.sh', '.github/scripts/setup-ci-deps.sh', 'CMakePresets.json', 'cmake/toolchain/*.cmake', 'cmake/triplets/*.cmake') }}
+      - name: Install native compiler and dependencies
+        run: |
+          bash scripts/install-dependencies.sh --toolchain "$GRPCXX_TOOLCHAIN"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Install clang-tidy-23
+        if: matrix.toolchain == 'clang-glibc'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnupg
+          curl -fsSL https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc >/dev/null
+          echo "deb http://apt.llvm.org/noble/ llvm-toolchain-noble-23 main" | sudo tee /etc/apt/sources.list.d/llvm.list >/dev/null
+          sudo apt-get update
+          sudo apt-get install -y clang-tidy-23
+      - name: Record kernel and enable io_uring
+        run: |
+          uname -a
+          sudo sysctl -w kernel.io_uring_disabled=0
+      - name: Check scripts and CLI
+        run: |
+          bash -n scripts/install-dependencies.sh .github/scripts/setup-ci-deps.sh
+          uv run --directory scripts/cli ruff check .
+          uv run --directory scripts/cli pytest
+      - name: Check C++ formatting
+        if: matrix.toolchain == 'clang-glibc'
+        run: ./nexora format --check
+      - name: Check file size limits
+        run: |
+          python3 - <<'PY'
+          import pathlib, subprocess
+          names = subprocess.check_output(['git', 'ls-files', '-z']).decode().split('\0')
+          for name in names:
+              path = pathlib.Path(name)
+              if path.is_file() and (path.suffix in {'.h', '.hpp', '.cc', '.py'} or path.name == 'CMakeLists.txt'):
+                  count = len(path.read_bytes().splitlines())
+                  if count >= 600:
+                      raise SystemExit(f'{name}: {count} lines reaches 600-line limit')
+          PY
+      - name: Build and run tests
+        run: ./nexora test --preset "${GRPCXX_TOOLCHAIN}-release" -j 2
+      - name: Clang-tidy
+        if: matrix.toolchain == 'clang-glibc'
+        run: |
+          clang-tidy-23 --version
+          ./nexora tidy --preset clang-glibc-release
+      - name: Run ASan and UBSan tests
+        if: matrix.toolchain == 'gcc-glibc' || matrix.toolchain == 'clang-glibc'
+        run: ./nexora test --preset "${GRPCXX_TOOLCHAIN}-asan-ubsan" -j 2
+      - name: Archive test diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-diagnostics-${{ matrix.toolchain }}
+          path: |
+            build/**/Testing/Temporary/
+            build/**/CMakeFiles/CMakeConfigureLog.yaml
+          if-no-files-found: ignore

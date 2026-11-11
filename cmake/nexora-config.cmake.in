@@ -1,0 +1,13 @@
+@PACKAGE_INIT@
+if(NOT DEFINED CMAKE_CXX_SCAN_FOR_MODULES)
+  set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+endif()
+include(CMakeFindDependencyMacro)
+set(NEXORA_CONSUMER_CONFIG TRUE)
+include("${CMAKE_CURRENT_LIST_DIR}/NexoraTlsDependency.cmake")
+nexora_find_tls_dependency()
+find_dependency(uarch CONFIG REQUIRED)
+find_dependency(uring CONFIG REQUIRED)
+find_dependency(cares CONFIG REQUIRED)
+include("${CMAKE_CURRENT_LIST_DIR}/nexora-targets.cmake")
+check_required_components(nexora)

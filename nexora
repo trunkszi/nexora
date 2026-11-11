@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+NEXORA_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPTS_DIR="${NEXORA_ROOT}/scripts"
+if ! command -v uv >/dev/null 2>&1; then
+    echo "Error: uv is required; install it from https://docs.astral.sh/uv/." >&2
+    exit 1
+fi
+export PYTHONPATH="${SCRIPTS_DIR}${PYTHONPATH:+:$PYTHONPATH}"
+exec uv run --offline --locked --directory "${SCRIPTS_DIR}/cli" python -m cli "$@"
